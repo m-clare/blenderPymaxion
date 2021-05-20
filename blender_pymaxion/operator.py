@@ -40,13 +40,19 @@ class write_particle_system(Operator):
         data["Particles"] = []
         for index, v in enumerate(me.vertices):
             data["Particles"].append([v.co.x, v.co.y, v.co.z])
-
+        # TODO: add prestressed length
         data["Cables"] = {}
         if obj.data["Cables"]:
             for cable, attr in obj.data["Cables"].items():
                 E = attr["E"]
                 A = attr["A"]
                 data["Cables"].update({cable: {"E": E, "A": A}})
+        data["Bars"] = {}
+        if obj.data["Bars"]:
+            for bar, attr in obj.data["Bars"].items():
+                E = attr["E"]
+                A = attr["A"]
+                data["Bars"].update({bar: {"E": E, "A": A}})
         data["Anchors"] = {}
         if obj.data["Anchors"]:
             for anchor, attr in obj.data["Anchors"].items():
@@ -96,6 +102,10 @@ class solve_particle_system(Operator):
             cables = self.parse_cables(obj.data["Cables"])
             psystem.add_constraints_to_system(cables)
 
+        if obj.data["Bars"]:
+            bars = self.parse_bars(obj.data["Bars"])
+            psystem.add_constraints_to_system(bars)
+
         if obj.data["Forces"]:
             forces = self.parse_forces(obj.data["Forces"])
             psystem.add_constraints_to_system(forces)
@@ -134,6 +144,17 @@ class solve_particle_system(Operator):
             cable_list.append(pcable)
         return cable_list
 
+    def parse_bars(self, bars):
+        bar_list = []
+        for bar, attr in bars.items():
+            bt = eval(bar)
+            x0, y0, z0 = self.get_vert_coordinates(bt[0])
+            x1, y1, z1 = self.get_vert_coordinates(bt[1])
+            p0 = Particle(x0, y0, z0)
+            p1 = Particle(x1, y1, z1)
+            pbar = Bar([p0, p1], attr["E"], attr["A"])
+            bar_list.append(pbar)
+
     def parse_anchors(self, anchors):
         anchor_list = []
         for anchor, attr in anchors.items():
@@ -171,8 +192,10 @@ class PYMAXION_OT_anchorConstraint(Operator):
     )
 
     def execute(self, context):
+        scene = context.scene
+        tools = scene.tools
         if self.action == "ADD":
-            self.add_anchors(context=context)
+            self.add_anchors(context=context, strength=tools.anchor_strength)
         if self.action == "REMOVE":
             self.remove_anchors(context=context)
         if self.action == "SHOW":
@@ -180,7 +203,7 @@ class PYMAXION_OT_anchorConstraint(Operator):
         return {"FINISHED"}
 
     @staticmethod
-    def add_anchors(context):
+    def add_anchors(context, strength):
         obj = bpy.context.active_object
         if obj.type == "MESH":
             if obj.name == "Pymaxion Particle System":
@@ -190,7 +213,7 @@ class PYMAXION_OT_anchorConstraint(Operator):
                 if "Anchors" not in obj.data:
                     obj.data["Anchors"] = {}
                 for v in vs:
-                    obj.data["Anchors"][str(v.index)] = {"strength": 1e20}
+                    obj.data["Anchors"][str(v.index)] = {"strength": strength}
                     print("Added an anchor " + str(v.index))
                 bpy.ops.object.mode_set(mode=mode)
             else:
@@ -263,6 +286,58 @@ class PYMAXION_OT_cableConstraint(Operator):
     def show_cables(context):
         print("Showing cables")
 
+class PYMAXION_OT_barConstraint(Operator):
+    bl_idname = "pymaxion_blender.bar_constraint"
+    bl_label = " Constraint"
+    bl_description = "Actions related to bar constraints."
+    bl_options = {"REGISTER", "UNDO"}
+
+    action: EnumProperty(
+        items=[
+            ("ADD", "add bars", "add bars"),
+            ("REMOVE", "remove bars", "remove bars"),
+            ("SHOW", "show bars", "show bars"),
+        ]
+    )
+
+    def execute(self, context):
+        if self.action == "ADD":
+            self.add_bars(context=context)
+        if self.action == "REMOVE":
+            self.remove_bars(context=context)
+        if self.action == "SHOW":
+            self.show_bars(context=context)
+        return {"FINISHED"}
+
+    @staticmethod
+    def add_bars(context):
+        obj = bpy.context.active_object
+        if obj.type == "MESH":
+            if obj.name == "Pymaxion Particle System":
+                mode = bpy.context.active_object.mode
+                bpy.ops.object.mode_set(mode="OBJECT")
+                es = [e for e in bpy.context.active_object.data.edges if e.select]
+                if "Bars" not in obj.data:
+                    obj.data["Bars"] = {}
+                for e in es:
+                    vs = e.vertices
+                    obj.data["Bars"][str((vs[0], vs[1]))] = {
+                        "E": 210e9,
+                        "A": 0.02 ** 2.0 * np.pi / 4.0,
+                    }
+                    print("Added a bar " + str((vs[0], vs[1])))
+                bpy.ops.object.mode_set(mode=mode)
+            else:
+                raise ValueError("Bars are not part of a Pymaxion Particle System")
+
+    @staticmethod
+    def remove_bars(context):
+        print("Removing bars")
+
+    @staticmethod
+    def show_bars(context):
+        print("Showing bars")
+
 
 class PYMAXION_OT_forceConstraint(Operator):
     bl_idname = "pymaxion_blender.force_constraint"
@@ -311,3 +386,4 @@ class PYMAXION_OT_forceConstraint(Operator):
     @staticmethod
     def show_forces(context):
         print("Showing forces")
+        

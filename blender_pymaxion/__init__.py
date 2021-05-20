@@ -9,6 +9,7 @@ if bpy is not None:
 
     from . import ui
     from . import operator
+    from . import properties
 
     classes = (
         operator.create_particle_system,
@@ -17,14 +18,20 @@ if bpy is not None:
         operator.PYMAXION_OT_anchorConstraint,
         operator.PYMAXION_OT_cableConstraint,
         operator.PYMAXION_OT_forceConstraint,
+        operator.PYMAXION_OT_barConstraint,
         ui.PYMAXION_PT_particleSystem,
         ui.PYMAXION_PT_constraints,
+        properties.UserInputProperties,
     )
 
     def register():
         for cls in classes:
             register_class(cls)
 
+        bpy.types.Scene.tools = bpy.props.PointerProperty(type=properties.UserInputProperties)
+
     def un_register():
         for cls in reversed(classes):
             unregister_class(cls)
+
+        del bpy.types.Scene.tools

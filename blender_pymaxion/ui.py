@@ -1,5 +1,7 @@
 import bpy
-from bpy.types import Panel
+from bpy.types import Panel, PropertyGroup
+from bpy.props import FloatProperty
+
 
 
 class PYMAXION_PT_particleSystem(Panel):
@@ -35,6 +37,8 @@ class PYMAXION_PT_constraints(Panel):
 
     def draw(self, context):
         layout = self.layout
+        scene = context.scene
+        tools = scene.tools # TODO: more descriptive?
 
         row = layout.row(align=True)
         row.operator(
@@ -46,6 +50,11 @@ class PYMAXION_PT_constraints(Panel):
         row.operator(
             "pymaxion_blender.anchor_constraint", text="Show Anchors"
         ).action = "SHOW"
+        # hopefully text field
+        layout.prop(tools, "anchor_strength", text="Anchor Strength")
+        # layout.prop(tools, "anchor_strength.power", text="Power")
+
+        layout.separator()
 
         row = layout.row(align=True)
         row.operator(
@@ -60,6 +69,17 @@ class PYMAXION_PT_constraints(Panel):
 
         row = layout.row(align=True)
         row.operator(
+            "pymaxion_blender.bar_constraint", text="Add Bars"
+        ).action = "ADD"
+        row.operator(
+            "pymaxion_blender.bar_constraint", text="Remove Bars"
+        ).action = "REMOVE"
+        row.operator(
+            "pymaxion_blender.bar_constraint", text="Show Bars"
+        ).action = "SHOW"
+
+        row = layout.row(align=True)
+        row.operator(
             "pymaxion_blender.force_constraint", text="Add Forces"
         ).action = "ADD"
         row.operator(
@@ -68,3 +88,5 @@ class PYMAXION_PT_constraints(Panel):
         row.operator(
             "pymaxion_blender.force_constraint", text="Show Forces"
         ).action = "SHOW"
+
+
