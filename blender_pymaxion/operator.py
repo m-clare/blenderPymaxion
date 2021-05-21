@@ -196,7 +196,6 @@ class PYMAXION_OT_anchorConstraint(Operator):
 
     def execute(self, context):
         scene = context.scene
-        tools = scene.tools
         sciProp = scene.sciProp
         if self.action == "ADD":
             self.add_anchors(context=context, strength=sciProp.value)
@@ -358,8 +357,10 @@ class PYMAXION_OT_forceConstraint(Operator):
     )
 
     def execute(self, context):
+        scene = context.scene
+        sciProp = scene.sciProp
         if self.action == "ADD":
-            self.add_forces(context=context)
+            self.add_forces(context=context, strength=sciProp.value)
         if self.action == "REMOVE":
             self.remove_forces(context=context)
         if self.action == "SHOW":
@@ -367,7 +368,7 @@ class PYMAXION_OT_forceConstraint(Operator):
         return {"FINISHED"}
 
     @staticmethod
-    def add_forces(context):
+    def add_forces(context, strength):
         obj = bpy.context.active_object
         if obj.type == "MESH":
             if obj.name == "Pymaxion Particle System":
@@ -377,7 +378,7 @@ class PYMAXION_OT_forceConstraint(Operator):
                 if "Forces" not in obj.data:
                     obj.data["Forces"] = {}
                 for v in vs:
-                    obj.data["Forces"][str(v.index)] = {"vector": [0, 0, -5e6]}
+                    obj.data["Forces"][str(v.index)] = {"vector": [0, 0, strength]}
                     print("Added a force " + str(v.index))
                 bpy.ops.object.mode_set(mode=mode)
             else:
@@ -390,4 +391,3 @@ class PYMAXION_OT_forceConstraint(Operator):
     @staticmethod
     def show_forces(context):
         print("Showing forces")
-        

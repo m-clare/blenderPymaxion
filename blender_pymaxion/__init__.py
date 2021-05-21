@@ -19,10 +19,14 @@ if bpy is not None:
         operator.PYMAXION_OT_cableConstraint,
         operator.PYMAXION_OT_forceConstraint,
         operator.PYMAXION_OT_barConstraint,
+        ui.HelloWorldPanel,
         ui.PYMAXION_PT_particleSystem,
         ui.PYMAXION_PT_constraints,
+        ui.PYMAXION_PT_Anchor,
+        ui.PYMAXION_PT_Force,
         properties.UserInputProperties,
         properties.ScientificNotation,
+
     )
 
     def register():
@@ -31,6 +35,7 @@ if bpy is not None:
 
         bpy.types.Scene.tools = bpy.props.PointerProperty(type=properties.UserInputProperties)
         bpy.types.Scene.sciProp = bpy.props. PointerProperty(type=properties.ScientificNotation)
+
 
     def un_register():
         for cls in reversed(classes):
