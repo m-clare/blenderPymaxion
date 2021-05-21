@@ -39,20 +39,24 @@ class PYMAXION_PT_constraints(Panel):
         layout = self.layout
         scene = context.scene
         tools = scene.tools # TODO: more descriptive?
+        sciProp = scene.sciProp
 
-        row = layout.row(align=True)
+
+        box = layout.box()
+        box.label(text="Anchor Constraint")
+        row = box.row(align=True)
+        row.prop(sciProp, "number", text="Strength Value")
+        row.prop(sciProp, "power", text="10^")
         row.operator(
             "pymaxion_blender.anchor_constraint", text="Add Anchors"
         ).action = "ADD"
+        row = box.row(align=True)
         row.operator(
             "pymaxion_blender.anchor_constraint", text="Remove Anchors"
         ).action = "REMOVE"
         row.operator(
             "pymaxion_blender.anchor_constraint", text="Show Anchors"
         ).action = "SHOW"
-        # hopefully text field
-        layout.prop(tools, "anchor_strength", text="Anchor Strength")
-        # layout.prop(tools, "anchor_strength.power", text="Power")
 
         layout.separator()
 

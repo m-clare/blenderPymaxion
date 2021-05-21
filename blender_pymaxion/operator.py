@@ -13,6 +13,7 @@ from pymaxion.particle_system import ParticleSystem
 from pymaxion.particle import Particle
 from pymaxion.constraints.cable import Cable
 from pymaxion.constraints.force import Force
+from pymaxion.constraints.bar import Bar
 
 
 class create_particle_system(Operator):
@@ -41,25 +42,26 @@ class write_particle_system(Operator):
         for index, v in enumerate(me.vertices):
             data["Particles"].append([v.co.x, v.co.y, v.co.z])
         # TODO: add prestressed length
+        # TODO: General writing attr based on available obj data
         data["Cables"] = {}
-        if obj.data["Cables"]:
+        if "Cables" in obj.data:
             for cable, attr in obj.data["Cables"].items():
                 E = attr["E"]
                 A = attr["A"]
                 data["Cables"].update({cable: {"E": E, "A": A}})
         data["Bars"] = {}
-        if obj.data["Bars"]:
+        if "Bars" in obj.data:
             for bar, attr in obj.data["Bars"].items():
                 E = attr["E"]
                 A = attr["A"]
                 data["Bars"].update({bar: {"E": E, "A": A}})
         data["Anchors"] = {}
-        if obj.data["Anchors"]:
+        if "Anchors" in obj.data:
             for anchor, attr in obj.data["Anchors"].items():
                 strength = attr["strength"]
                 data["Anchors"].update({anchor: {"strength": strength}})
         data["Forces"] = {}
-        if obj.data["Forces"]:
+        if "Forces" in obj.data:
             for force, attr in obj.data["Forces"].items():
                 vector = attr["vector"]
                 data["Forces"].update({force: [vector[0], vector[1], vector[2]]})
@@ -98,19 +100,20 @@ class solve_particle_system(Operator):
             x, y, z = self.get_vert_coordinates(pt.index)
             psystem.add_particle_to_system(Particle(x, y, z))
 
-        if obj.data["Cables"]:
+        # TODO: Generalize constraint types so that "parse" will match to the correct function?
+        if "Cables" in obj.data:
             cables = self.parse_cables(obj.data["Cables"])
             psystem.add_constraints_to_system(cables)
 
-        if obj.data["Bars"]:
+        if "Bars" in obj.data:
             bars = self.parse_bars(obj.data["Bars"])
             psystem.add_constraints_to_system(bars)
 
-        if obj.data["Forces"]:
+        if "Forces" in obj.data:
             forces = self.parse_forces(obj.data["Forces"])
             psystem.add_constraints_to_system(forces)
 
-        if obj.data["Anchors"]:
+        if "Anchors" in obj.data:
             anchors = self.parse_anchors(obj.data["Anchors"])
             psystem.add_constraints_to_system(anchors)
 
@@ -194,8 +197,9 @@ class PYMAXION_OT_anchorConstraint(Operator):
     def execute(self, context):
         scene = context.scene
         tools = scene.tools
+        sciProp = scene.sciProp
         if self.action == "ADD":
-            self.add_anchors(context=context, strength=tools.anchor_strength)
+            self.add_anchors(context=context, strength=sciProp.value)
         if self.action == "REMOVE":
             self.remove_anchors(context=context)
         if self.action == "SHOW":

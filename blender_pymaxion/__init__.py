@@ -22,6 +22,7 @@ if bpy is not None:
         ui.PYMAXION_PT_particleSystem,
         ui.PYMAXION_PT_constraints,
         properties.UserInputProperties,
+        properties.ScientificNotation,
     )
 
     def register():
@@ -29,9 +30,11 @@ if bpy is not None:
             register_class(cls)
 
         bpy.types.Scene.tools = bpy.props.PointerProperty(type=properties.UserInputProperties)
+        bpy.types.Scene.sciProp = bpy.props. PointerProperty(type=properties.ScientificNotation)
 
     def un_register():
         for cls in reversed(classes):
             unregister_class(cls)
 
         del bpy.types.Scene.tools
+        del bpy.types.Scene.sciProp

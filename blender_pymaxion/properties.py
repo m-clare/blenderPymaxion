@@ -4,14 +4,10 @@ from bpy.props import FloatProperty
 from bpy.props import IntProperty
 from bpy.props import StringProperty
 
-class ScientificNotation():
-    def __init__(name='', description=''):
-        self.name = name
-        self.description = description
-
+class ScientificNotation(PropertyGroup):
     def get_num(self):
         return self.number * pow(10, self.power)
-    number: FloatProperty(min=1, max=10, defaulbt=1, precision=2)
+    number: FloatProperty(min=1, max=10, default=1, precision=2)
     power: IntProperty()
     value = property(get_num)
 
