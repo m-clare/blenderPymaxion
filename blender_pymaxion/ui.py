@@ -43,8 +43,6 @@ class PYMAXION_PT_constraints(Panel):
         scene = context.scene
         tools = scene.tools  # TODO: more descriptive?
 
-        layout.popover("OBJECT_PT_hello")
-
         box = layout.box()
         box.label(text="Anchor constraints")
         box.popover("PYMAXION_PT_Anchor")

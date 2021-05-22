@@ -85,9 +85,15 @@ class solve_particle_system(Operator):
     def execute(self, context):
         if bpy.data.objects["Pymaxion Particle System"]:
             obj = bpy.data.objects["Pymaxion Particle System"]
+            bpy.context.view_layer.objects.active = obj
+            new_obj = obj.copy()
+            new_obj.data = obj.data.copy()
+            obj.name = "Pymaxion Initial Particle System"
+            new_obj.name = "Pymaxion Particle System"
+            bpy.context.collection.objects.link(new_obj)
+            obj.hide_set(True)
             print("Found particle system!")
-
-            data = self.profile_run(obj)
+            data = self.profile_run(new_obj)
 
         return {"FINISHED"}
 
@@ -97,24 +103,24 @@ class solve_particle_system(Operator):
         psystem = ParticleSystem()
 
         for pt in obj.data.vertices:
-            x, y, z = self.get_vert_coordinates(pt.index)
+            x, y, z = self.get_vert_coordinates(obj, pt.index)
             psystem.add_particle_to_system(Particle(x, y, z))
 
         # TODO: Generalize constraint types so that "parse" will match to the correct function?
         if "Cables" in obj.data:
-            cables = self.parse_cables(obj.data["Cables"])
+            cables = self.parse_cables(obj, obj.data["Cables"])
             psystem.add_constraints_to_system(cables)
 
         if "Bars" in obj.data:
-            bars = self.parse_bars(obj.data["Bars"])
+            bars = self.parse_bars(obj, obj.data["Bars"])
             psystem.add_constraints_to_system(bars)
 
         if "Forces" in obj.data:
-            forces = self.parse_forces(obj.data["Forces"])
+            forces = self.parse_forces(obj, obj.data["Forces"])
             psystem.add_constraints_to_system(forces)
 
         if "Anchors" in obj.data:
-            anchors = self.parse_anchors(obj.data["Anchors"])
+            anchors = self.parse_anchors(obj ,obj.data["Anchors"])
             psystem.add_constraints_to_system(anchors)
 
         bpy.ops.object.mode_set(mode="OBJECT")
@@ -129,55 +135,75 @@ class solve_particle_system(Operator):
 
         return data
 
-    def get_vert_coordinates(self, vert_index):
-        obj = bpy.data.objects["Pymaxion Particle System"]
+    def get_vert_coordinates(self, obj, vert_index):
         verts = obj.data.vertices
         x, y, z = verts[vert_index].co
         return x, y, z
 
-    def parse_cables(self, cables):
+    def parse_cables(self, obj, cables):
         cable_list = []
         for cable, attr in cables.items():
             ct = eval(cable)
-            x0, y0, z0 = self.get_vert_coordinates(ct[0])
-            x1, y1, z1 = self.get_vert_coordinates(ct[1])
+            x0, y0, z0 = self.get_vert_coordinates(obj, ct[0])
+            x1, y1, z1 = self.get_vert_coordinates(obj, ct[1])
             p0 = Particle(x0, y0, z0)
             p1 = Particle(x1, y1, z1)
             pcable = Cable([p0, p1], attr["E"], attr["A"])
             cable_list.append(pcable)
         return cable_list
 
-    def parse_bars(self, bars):
+    def parse_bars(self, obj, bars):
         bar_list = []
         for bar, attr in bars.items():
             bt = eval(bar)
-            x0, y0, z0 = self.get_vert_coordinates(bt[0])
-            x1, y1, z1 = self.get_vert_coordinates(bt[1])
+            x0, y0, z0 = self.get_vert_coordinates(obj, bt[0])
+            x1, y1, z1 = self.get_vert_coordinates(obj, bt[1])
             p0 = Particle(x0, y0, z0)
             p1 = Particle(x1, y1, z1)
             pbar = Bar([p0, p1], attr["E"], attr["A"])
             bar_list.append(pbar)
 
-    def parse_anchors(self, anchors):
+    def parse_anchors(self, obj, anchors):
         anchor_list = []
         for anchor, attr in anchors.items():
             at = eval(anchor)
-            x0, y0, z0 = self.get_vert_coordinates(at)
+            x0, y0, z0 = self.get_vert_coordinates(obj, at)
             p0 = Particle(x0, y0, z0)
             panchor = Anchor([p0], attr["strength"])
             anchor_list.append(panchor)
         return anchor_list
 
-    def parse_forces(self, forces):
+    def parse_forces(self, obj, forces):
         force_list = []
         for force, attr in forces.items():
             ft = eval(force)
-            x0, y0, z0 = self.get_vert_coordinates(ft)
+            x0, y0, z0 = self.get_vert_coordinates(obj, ft)
             p0 = Particle(x0, y0, z0)
             vec = attr["vector"]
             pforce = Force([p0], [vec[0], vec[1], vec[2]])
             force_list.append(pforce)
         return force_list
+
+
+class reset_particle_system(Operator):
+    bl_idname = "pymaxion_blender.reset_particle_system"
+    bl_label = "Reset Particle System"
+
+    def execute(self, context):
+        # check if updated and initial systems exist
+        if bpy.data.objects["Pymaxion Initial Particle System"] and bpy.data.objects["Pymaxion Particle System"]:
+            # "archive existing system" -- set up as User choice?
+            archive_obj = bpy.data.objects["Pymaxion Particle System"]
+            archive_obj.name = "pps_archived"
+            # remove object from collection
+            bpy.data.objects.remove(archive_obj)
+            reset_obj = bpy.data.objects["Pymaxion Initial Particle System"]
+            reset_obj.name = "Pymaxion Particle System"
+            reset_obj.hide_set(False)
+        else:
+            raise ValueError("No sufficient particle system found.")
+
+        return {"FINISHED"}
 
 
 class PYMAXION_OT_anchorConstraint(Operator):
@@ -224,16 +250,30 @@ class PYMAXION_OT_anchorConstraint(Operator):
 
     @staticmethod
     def remove_anchors(context):
-        # if bpy.data.objects['Pymaxion Particle System']:
-        # obj = bpy.context.
-        print("Removing anchors")
+        obj = bpy.context.active_object
+        if obj.type == "MESH":
+            if obj.name == "Pymaxion Particle System":
+                mode = bpy.context.active_object.mode
+                bpy.ops.object.mode_set(mode="EDIT")
+                vs = [v for v in bpy.context.active_object.data.vertices if v.select]
+                if "Anchors" in obj.data:
+                    bpy.ops.mesh.select_all(action='DESELECT')
+                    for v in vs:
+                        obj.data["Anchors"].pop(str(v.index), None)
+                        print("Removing anchor at " + str(v.index))
 
     @staticmethod
     def show_anchors(context):
-        obj = bpy.data.objects["Pymaxion Particle System"]
-        if "Anchors" in obj.data:
-            for key, value in obj.data["Anchors"].items():
-                print(key, obj.data["Anchors"][key]["strength"])
+        if bpy.data.objects["Pymaxion Particle System"]:
+            obj = bpy.data.objects['Pymaxion Particle System']
+            mode = bpy.context.active_object.mode
+            bpy.ops.object.mode_set(mode="OBJECT")
+            if "Anchors" in obj.data:
+                for key in obj.data["Anchors"].keys():
+                    id = eval(key)
+                    obj.data.vertices[id].select = True
+                    print(key, obj.data["Anchors"][key]["strength"])
+                bpy.ops.object.mode_set(mode = 'EDIT')
         print("Showing anchors")
 
 
@@ -288,6 +328,7 @@ class PYMAXION_OT_cableConstraint(Operator):
     @staticmethod
     def show_cables(context):
         print("Showing cables")
+
 
 class PYMAXION_OT_barConstraint(Operator):
     bl_idname = "pymaxion_blender.bar_constraint"
