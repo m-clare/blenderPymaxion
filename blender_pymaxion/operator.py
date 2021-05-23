@@ -6,6 +6,7 @@ import sys
 import numpy as np
 from profilehooks import profile
 import json
+from math import pi
 
 # Pymaxion imports
 from pymaxion.constraints.anchor import Anchor
@@ -222,9 +223,9 @@ class PYMAXION_OT_anchorConstraint(Operator):
 
     def execute(self, context):
         scene = context.scene
-        sciProp = scene.sciProp
+        anchorProp = scene.anchorProp
         if self.action == "ADD":
-            self.add_anchors(context=context, strength=sciProp.value)
+            self.add_anchors(context=context, strength=anchorProp.value)
         if self.action == "REMOVE":
             self.remove_anchors(context=context)
         if self.action == "SHOW":
@@ -292,8 +293,11 @@ class PYMAXION_OT_cableConstraint(Operator):
     )
 
     def execute(self, context):
+        scene = context.scene
+        tools = scene.tools
+        cableProp = scene.cableProp
         if self.action == "ADD":
-            self.add_cables(context=context)
+            self.add_cables(context=context, E=cableProp.value, d=tools.cable_diameter)
         if self.action == "REMOVE":
             self.remove_cables(context=context)
         if self.action == "SHOW":
@@ -301,7 +305,7 @@ class PYMAXION_OT_cableConstraint(Operator):
         return {"FINISHED"}
 
     @staticmethod
-    def add_cables(context):
+    def add_cables(context, E, d):
         obj = bpy.context.active_object
         if obj.type == "MESH":
             if obj.name == "Pymaxion Particle System":
@@ -313,8 +317,8 @@ class PYMAXION_OT_cableConstraint(Operator):
                 for e in es:
                     vs = e.vertices
                     obj.data["Cables"][str((vs[0], vs[1]))] = {
-                        "E": 210e9,
-                        "A": 0.02 ** 2.0 * np.pi / 4.0,
+                        "E": E,
+                        "A": 0.25 * d ** 2.0 * pi,
                     }
                     print("Added a cable " + str((vs[0], vs[1])))
                 bpy.ops.object.mode_set(mode=mode)
@@ -346,7 +350,7 @@ class PYMAXION_OT_barConstraint(Operator):
 
     def execute(self, context):
         if self.action == "ADD":
-            self.add_bars(context=context)
+            self.add_bars(context=context, E=barProp.value, A=tools.bar_area)
         if self.action == "REMOVE":
             self.remove_bars(context=context)
         if self.action == "SHOW":
@@ -354,7 +358,7 @@ class PYMAXION_OT_barConstraint(Operator):
         return {"FINISHED"}
 
     @staticmethod
-    def add_bars(context):
+    def add_bars(context, E, A):
         obj = bpy.context.active_object
         if obj.type == "MESH":
             if obj.name == "Pymaxion Particle System":
@@ -366,8 +370,8 @@ class PYMAXION_OT_barConstraint(Operator):
                 for e in es:
                     vs = e.vertices
                     obj.data["Bars"][str((vs[0], vs[1]))] = {
-                        "E": 210e9,
-                        "A": 0.02 ** 2.0 * np.pi / 4.0,
+                        "E": E,
+                        "A": A,
                     }
                     print("Added a bar " + str((vs[0], vs[1])))
                 bpy.ops.object.mode_set(mode=mode)

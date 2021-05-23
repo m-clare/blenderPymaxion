@@ -56,10 +56,10 @@ class PYMAXION_PT_constraints(Panel):
 
         layout.separator()
 
-        row = layout.row(align=True)
-        row.operator(
-            "pymaxion_blender.cable_constraint", text="Add Cables"
-        ).action = "ADD"
+        box = layout.box()
+        box.label(text="Cable constraints")
+        box.popover("PYMAXION_PT_Cable")
+        row = box.row(align=True)
         row.operator(
             "pymaxion_blender.cable_constraint", text="Remove Cables"
         ).action = "REMOVE"
@@ -79,7 +79,7 @@ class PYMAXION_PT_constraints(Panel):
         layout.separator()
 
         box = layout.box()
-        box.label(text="Force  constraints")
+        box.label(text="Force constraints")
         box.popover("PYMAXION_PT_Force")
         row = box.row(align=True)
         row.operator(
@@ -100,14 +100,37 @@ class PYMAXION_PT_Anchor(Panel):
     def draw(self, context):
         layout = self.layout
         scene = context.scene
-        sciProp = scene.sciProp
+        anchorProp = scene.anchorProp
 
         layout.label(text="Add Anchor Constraint")
         row = layout.row(align=True)
-        row.prop(sciProp, "number", text="Strength Value")
-        row.prop(sciProp, "power", text="10^")
+        row.prop(anchorProp, "number", text="Strength Value")
+        row.prop(anchorProp, "power", text="10^")
         row = layout.row(align=True)
         row.operator("pymaxion_blender.anchor_constraint", text="Add").action = "ADD"
+
+
+class PYMAXION_PT_Cable(Panel):
+    bl_label = "Add Cables"
+    bl_idname = "PYMAXION_PT_Cable"
+    bl_options = {"INSTANCED"}
+    bl_space_type = "VIEW_3D"
+    bl_region_type = "WINDOW"
+
+    def draw(self, context):
+        layout = self.layout
+        scene = context.scene
+        tools = scene.tools
+        cableProp = scene.cableProp
+
+        layout.label(text="Add Cable")
+        row = layout.row(align=True)
+        row.prop(cableProp, "number", text="Strength Value")
+        row.prop(cableProp, "power", text="10^")
+        row = layout.row(align=True)
+        row.prop(tools, "cable_diameter", text="Cable diameter (m)")
+        row = layout.row(align=True)
+        row.operator("pymaxion_blender.cable_constraint", text="Add").action = "ADD"
 
 class PYMAXION_PT_Force(Panel):
     bl_label = "Add Forces"
