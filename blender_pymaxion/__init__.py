@@ -7,9 +7,16 @@ if bpy is not None:
     from bpy.utils import register_class
     from bpy.utils import unregister_class
 
-    from . import ui
-    from . import operator
-    from . import properties
+    # Check if this add-on is being reloaded
+    if "properties" not in locals():
+        from . import ui
+        from . import operator
+        from . import properties
+    else:
+        import importlib
+        ui = importlib.reload(ui)
+        operator = importlib.reload(operator)
+        properties = importlib.reload(properties)
 
     classes = (
         operator.create_particle_system,
@@ -26,10 +33,12 @@ if bpy is not None:
         ui.PYMAXION_PT_Force,
         ui.PYMAXION_PT_Cable,
         properties.UserInputProperties,
-        properties.AnchorSciNot,
-        properties.BarSciNot,
-        properties.CableSciNot,
-        properties.ForceSciNot
+        properties.ScientificNotation
+        # properties.Anchor
+        # properties.AnchorSciNot,
+        # properties.BarSciNot,
+        # properties.CableSciNot,
+        # properties.ForceSciNot
     )
 
     default_constraint_props = {'anchor': {'num': {'min': 1, 'max': 10, 'default': 1, 'precision': 2},
@@ -44,21 +53,27 @@ if bpy is not None:
     def register():
         for cls in classes:
             register_class(cls)
-
-        bpy.types.Scene.tools = bpy.props.PointerProperty(type=properties.UserInputProperties)
-
-        for constraint in default_constraint_props:
-            prop = properties.ScientificNotation(num_dict=constraint['num'], pow_dict=constraint['power'])
-            bpy.types.Scene[constraint] = bpy.props.PointerProperty(type=prop)
+        sciNot = bpy.props.PointerProperty(type=properties.ScientificNotation)
+        tools = bpy.props.PointerProperty(type=properties.UserInputProperties)
+        bpy.types.Scene.tools = bpy.props.PointerProperty(type=tools)
+        bpy.types.Scene.anchorProp = bpy.props.PointerProperty(type=sciNot)
+        bpy.types.Scene.cableProp = bpy.props.PointerProperty(type=sciNot)
+        bpy.types.Scene.forceProp = bpy.props.PointerProperty(type=sciNot)
+        print("Types loaded")
+        # for constraint in default_constraint_props:
+            # prop = properties.ScientificNotation(num_dict=constraint['num'], pow_dict=constraint['power'])
+            # bpy.types.Scene[constraint] = bpy.props.PointerProperty(type=prop)
 
         # bpy.types.Scene.anchorProp = bpy.props.PointerProperty(type=properties.AnchorSciNot)
         # bpy.types.Scene.cableProp = bpy.props.PointerProperty(type=properties.CableSciNot)
         # bpy.types.Scene,barProp = bpy.props.PointerProperty(type=properties.BarSciNot)
 
 
-    def un_register():
+    def unregister():
         for cls in reversed(classes):
             unregister_class(cls)
-
         del bpy.types.Scene.tools
-        del bpy.types.Scene.sciProp
+        del bpy.types.Scene.anchorProp
+        del bpy.types.Scene.cableProp
+        del bpy.types.Scene.forceProp
+        print("Types deleted")

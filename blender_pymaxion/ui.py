@@ -142,7 +142,7 @@ class PYMAXION_PT_Force(Panel):
     def draw(self, context):
         layout = self.layout
         scene = context.scene
-        sciProp = scene.sciProp
+        sciProp = scene.forceProp
 
         layout.label(text="Add Force Constraint")
         row = layout.row(align=True)
