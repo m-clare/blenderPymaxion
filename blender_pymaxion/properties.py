@@ -22,18 +22,29 @@ class ScientificNotation(PropertyGroup):
                 self.power[key] = self.power_dict.get(key, default_pow[key])
         return self.number * pow(10, self.power)
 
+class ConstraintProperties(PropertyGroup):
+    def get_num(base, orderTen):
+        return base * pow(10, orderTen)
 
-    # value = property(get_num)
+    # Anchor constraint
+    anchor_base: FloatProperty(min=1, max=10, default=1, precision=2)
+    anchor_power: IntProperty(min=-30, max=30, default=20)
+    anchor_strength = property(get_num(anchor_base, anchor_power))
 
-default_constraint_props = {'anchor': {'num': {'min': 1, 'max': 10, 'default': 1, 'precision': 2},
-                                       'power': {'min': -30 , 'max': 30, 'default': 20}},
-                            'cable':  {'num': {'min': 1, 'max': 10, 'default': 1, 'precision': 2},
-                                       'power': {'min':-20, 'max': 20, 'default': 6}},
-                            'bar':    {'num': {'min': 1, 'max': 10, 'default': 1, 'precision': 2},
-                                       'power': {'min':-20, 'max': 20, 'default': 6}},
-                            'force':  {'num': {'min': 1, 'max': 10, 'default': 1, 'precision': 2},
-                                       'power': {'min':-20, 'max':20, 'default': 6}}}
+    # Cable constraint
+    cable_base: FloatProperty(min=1, max=10, default=1, precision=2)
+    cable_power: IntProperty(min=-20, max=20, default=6)
+    cable_strength = property(get_num(cable_base, cable_power))
 
+    # Bar constraint
+    bar_base: FloatProperty(min=1, max=10, default=1, precision=2)
+    bar_power: IntProperty(min=-20, max=20, default=6)
+    bar_strength = property(get_num(bar_base, bar_power))
+
+    # Force constraint
+    force_base: FloatProperty(min=1, max=10, default=1, precision=2)
+    force_power: IntProperty(min=-20, max=20, default=6)
+    force_strength = property(get_num(force_base, force_power))
 
 class AnchorSciNot(PropertyGroup):
     def get_num(self):
