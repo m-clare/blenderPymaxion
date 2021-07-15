@@ -34,62 +34,27 @@ class ConstraintProperties(PropertyGroup):
     # Cable constraint
     cable_base: FloatProperty(min=1, max=10, default=1, precision=2)
     cable_power: IntProperty(min=-20, max=20, default=6)
-    cable_strength = property(get_num(cable_base, cable_power))
+    cable_modulus = property(get_num(cable_base, cable_power))
+    cable_diameter: FloatProperty(name="Cable diameter (m)",
+                                  description="Diameter of Cable",
+                                  min=1e-3,
+                                  max=2,
+                                  default=0.05,
+                                  precision=3)
 
     # Bar constraint
     bar_base: FloatProperty(min=1, max=10, default=1, precision=2)
     bar_power: IntProperty(min=-20, max=20, default=6)
-    bar_strength = property(get_num(bar_base, bar_power))
+    bar_modulus = property(get_num(bar_base, bar_power))
+    bar_area: FloatProperty(name="Bar area (m^2)",
+                            description="Area of Bar",
+                            min=1e-3,
+                            max=10,
+                            default=0.05,
+                            precision=3)
 
     # Force constraint
     force_base: FloatProperty(min=1, max=10, default=1, precision=2)
     force_power: IntProperty(min=-20, max=20, default=6)
-    force_strength = property(get_num(force_base, force_power))
-
-class AnchorSciNot(PropertyGroup):
-    def get_num(self):
-        return self.number * pow(10, self.power)
-    number: FloatProperty(min=1, max=10, default=1, precision=2)
-    power: IntProperty(min=-30, max=30, default=20)
-    value = property(get_num)
-
-# class ForceSciNot(PropertyGroup):
-#     def get_num(self):
-#         return self.number * pow(10, self.power)
-#     number: FloatProperty(min=1, max=10, default=1, precision=2)
-#     power: IntProperty(min=-20, max=20, default=6)
-#     value = property(get_num)
-
-# class CableSciNot(PropertyGroup):
-#     def get_num(self):
-#         return self.number * pow(10, self.power)
-#     number: FloatProperty(min=1, max=10, default=1, precision=2)
-#     power: IntProperty(min=-20, max=20, default=6)
-#     value = property(get_num)
-
-# class BarSciNot(PropertyGroup):
-#     def get_num(self):
-#         return self.number * pow(10, self.power)
-#     number: FloatProperty(min=1, max=10, default=1, precision=2)
-#     power: IntProperty(min=-20, max=20, default=6)
-#     value = property(get_num)
-
-class UserInputProperties(PropertyGroup):
-
-    anchor_strength: FloatProperty(
-        name="Anchor Strength",
-        description="Strength of Anchor Constraint",
-        min=0.001,
-        max=1e30,
-        default=1e20,
-        precision=3)
-
-    cable_diameter: FloatProperty(
-        name="Cable diameter (m)",
-        description="Diameter of Cable",
-        min=1e-3,
-        max=2,
-        default=0.05,
-        precision=3
-    )
+    force_resultant = property(get_num(force_base, force_power))
 

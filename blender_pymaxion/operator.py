@@ -223,9 +223,9 @@ class PYMAXION_OT_anchorConstraint(Operator):
 
     def execute(self, context):
         scene = context.scene
-        anchorProp = scene.anchorProp
+        tools = scene.tools
         if self.action == "ADD":
-            self.add_anchors(context=context, strength=anchorProp.value)
+            self.add_anchors(context=context, strength=tools.anchor_strength)
         if self.action == "REMOVE":
             self.remove_anchors(context=context)
         if self.action == "SHOW":
@@ -295,9 +295,8 @@ class PYMAXION_OT_cableConstraint(Operator):
     def execute(self, context):
         scene = context.scene
         tools = scene.tools
-        cableProp = scene.cableProp
         if self.action == "ADD":
-            self.add_cables(context=context, E=cableProp.value, d=tools.cable_diameter)
+            self.add_cables(context=context, E=tools.cable_modulus, d=tools.cable_diameter)
         if self.action == "REMOVE":
             self.remove_cables(context=context)
         if self.action == "SHOW":
@@ -349,8 +348,10 @@ class PYMAXION_OT_barConstraint(Operator):
     )
 
     def execute(self, context):
+        scene = context.scene
+        tools = scene.tools
         if self.action == "ADD":
-            self.add_bars(context=context, E=barProp.value, A=tools.bar_area)
+            self.add_bars(context=context, E=tools.bar_modulus, A=tools.bar_area)
         if self.action == "REMOVE":
             self.remove_bars(context=context)
         if self.action == "SHOW":

@@ -67,8 +67,12 @@ class PYMAXION_PT_constraints(Panel):
             "pymaxion_blender.cable_constraint", text="Show Cables"
         ).action = "SHOW"
 
+        layout.separator()
+
+        box = layout.box()
+        box.label(text="Bar constraints")
+        box.popover("PYMAXION_PT_Bar")
         row = layout.row(align=True)
-        row.operator("pymaxion_blender.bar_constraint", text="Add Bars").action = "ADD"
         row.operator(
             "pymaxion_blender.bar_constraint", text="Remove Bars"
         ).action = "REMOVE"
@@ -100,12 +104,12 @@ class PYMAXION_PT_Anchor(Panel):
     def draw(self, context):
         layout = self.layout
         scene = context.scene
-        anchorProp = scene.anchorProp
+        tools = scene.tools
 
         layout.label(text="Add Anchor Constraint")
         row = layout.row(align=True)
-        row.prop(anchorProp, "number", text="Strength Value")
-        row.prop(anchorProp, "power", text="10^")
+        row.prop(tools, "anchor_base", text="Strength Value")
+        row.prop(tools, "anchor_power", text="10^")
         row = layout.row(align=True)
         row.operator("pymaxion_blender.anchor_constraint", text="Add").action = "ADD"
 
@@ -121,16 +125,36 @@ class PYMAXION_PT_Cable(Panel):
         layout = self.layout
         scene = context.scene
         tools = scene.tools
-        cableProp = scene.cableProp
 
         layout.label(text="Add Cable")
         row = layout.row(align=True)
-        row.prop(cableProp, "number", text="Strength Value")
-        row.prop(cableProp, "power", text="10^")
+        row.prop(tools, "cable_base", text="Cable Modulus Value")
+        row.prop(tools, "cable_power", text="10^")
         row = layout.row(align=True)
         row.prop(tools, "cable_diameter", text="Cable diameter (m)")
         row = layout.row(align=True)
         row.operator("pymaxion_blender.cable_constraint", text="Add").action = "ADD"
+
+class PYMAXION_PT_Bar(Panel):
+    bl_label = "Add Bars"
+    bl_idname = "PYMAXION_PT_Bar"
+    bl_options = {"INSTANCED"}
+    bl_space_type = "VIEW_3D"
+    bl_region_type = "WINDOW"
+
+    def draw(self, context):
+        layout = self.layout
+        scene = context.scene
+        tools = scene.tools
+
+        layout.label(text="Add Bar")
+        row = layout.row(align=True)
+        row.prop(tools, "bar_base", text="Bar Modulus Value")
+        row.prop(tools, "bar_power", text="10^")
+        row = layout.row(align=True)
+        row.prop(tools, "bar_area", text="Bar area (m^2)")
+        row = layout.row(align=True)
+        row.operator("pymaxion_blender.bar_constraint", text="Add").action = "ADD"
 
 class PYMAXION_PT_Force(Panel):
     bl_label = "Add Forces"
@@ -142,11 +166,11 @@ class PYMAXION_PT_Force(Panel):
     def draw(self, context):
         layout = self.layout
         scene = context.scene
-        sciProp = scene.forceProp
+        tools = scene.tools
 
         layout.label(text="Add Force Constraint")
         row = layout.row(align=True)
-        row.prop(sciProp, "number", text="Strength Value")
-        row.prop(sciProp, "power", text="10^")
+        row.prop(tools, "force_base", text="Strength Value")
+        row.prop(tools, "force_power", text="10^")
         row = layout.row(align=True)
         row.operator("pymaxion_blender.force_constraint", text="Add").action = "ADD"
