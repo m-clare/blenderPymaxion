@@ -1,6 +1,6 @@
 import bpy
 from bpy.props import EnumProperty
-from bpy.types import Operator
+from bpy.types import Operator, PHYSICS_PT_flow_texture
 import bmesh
 import sys
 import numpy as np
@@ -223,9 +223,10 @@ class PYMAXION_OT_anchorConstraint(Operator):
 
     def execute(self, context):
         scene = context.scene
-        tools = scene.tools
+        propertyGroup = getattr(scene, "Anchor")
+        # tools = scene.tools
         if self.action == "ADD":
-            self.add_anchors(context=context, strength=tools.anchor_strength)
+            self.add_anchors(context=context, base=propertyGroup.base, power=propertyGroup.power)
         if self.action == "REMOVE":
             self.remove_anchors(context=context)
         if self.action == "SHOW":
@@ -233,7 +234,7 @@ class PYMAXION_OT_anchorConstraint(Operator):
         return {"FINISHED"}
 
     @staticmethod
-    def add_anchors(context, strength):
+    def add_anchors(context, base, power):
         obj = bpy.context.active_object
         if obj.type == "MESH":
             if obj.name == "Pymaxion Particle System":
@@ -243,7 +244,7 @@ class PYMAXION_OT_anchorConstraint(Operator):
                 if "Anchors" not in obj.data:
                     obj.data["Anchors"] = {}
                 for v in vs:
-                    obj.data["Anchors"][str(v.index)] = {"strength": strength}
+                    obj.data["Anchors"][str(v.index)] = {"strength": base * pow(10, power)}
                     print("Added an anchor " + str(v.index))
                 bpy.ops.object.mode_set(mode=mode)
             else:
@@ -294,9 +295,10 @@ class PYMAXION_OT_cableConstraint(Operator):
 
     def execute(self, context):
         scene = context.scene
-        tools = scene.tools
+        propertyGroup = getattr(scene, "Cable")
         if self.action == "ADD":
-            self.add_cables(context=context, E=tools.cable_modulus, d=tools.cable_diameter)
+            self.add_cables(context=context, base=propertyGroup.base,
+                            power=propertyGroup.power, diameter=propertyGroup.diameter)
         if self.action == "REMOVE":
             self.remove_cables(context=context)
         if self.action == "SHOW":
@@ -304,7 +306,7 @@ class PYMAXION_OT_cableConstraint(Operator):
         return {"FINISHED"}
 
     @staticmethod
-    def add_cables(context, E, d):
+    def add_cables(context, base, power, diameter):
         obj = bpy.context.active_object
         if obj.type == "MESH":
             if obj.name == "Pymaxion Particle System":
@@ -316,8 +318,8 @@ class PYMAXION_OT_cableConstraint(Operator):
                 for e in es:
                     vs = e.vertices
                     obj.data["Cables"][str((vs[0], vs[1]))] = {
-                        "E": E,
-                        "A": 0.25 * d ** 2.0 * pi,
+                        "E": base * pow(10, power),
+                        "A": 0.25 * diameter ** 2.0 * pi,
                     }
                     print("Added a cable " + str((vs[0], vs[1])))
                 bpy.ops.object.mode_set(mode=mode)
@@ -349,9 +351,10 @@ class PYMAXION_OT_barConstraint(Operator):
 
     def execute(self, context):
         scene = context.scene
-        tools = scene.tools
+        propertyGroup = getattr(scene, "Bar")
         if self.action == "ADD":
-            self.add_bars(context=context, E=tools.bar_modulus, A=tools.bar_area)
+            self.add_bars(context=context, base=propertyGroup.base,
+                          power=propertyGroup.power, area=propertyGroup.area)
         if self.action == "REMOVE":
             self.remove_bars(context=context)
         if self.action == "SHOW":
@@ -359,7 +362,7 @@ class PYMAXION_OT_barConstraint(Operator):
         return {"FINISHED"}
 
     @staticmethod
-    def add_bars(context, E, A):
+    def add_bars(context, base, power, area):
         obj = bpy.context.active_object
         if obj.type == "MESH":
             if obj.name == "Pymaxion Particle System":
@@ -371,8 +374,8 @@ class PYMAXION_OT_barConstraint(Operator):
                 for e in es:
                     vs = e.vertices
                     obj.data["Bars"][str((vs[0], vs[1]))] = {
-                        "E": E,
-                        "A": A,
+                        "E": base * pow(10, power),
+                        "A": area
                     }
                     print("Added a bar " + str((vs[0], vs[1])))
                 bpy.ops.object.mode_set(mode=mode)
@@ -390,8 +393,8 @@ class PYMAXION_OT_barConstraint(Operator):
 
 class PYMAXION_OT_forceConstraint(Operator):
     bl_idname = "pymaxion_blender.force_constraint"
-    bl_label = "Force Constraint"
-    bl_description = "Actions related to point force constraints."
+    bl_label = "Gravity Direction Force Constraint"
+    bl_description = "Actions related to point gravity direction force constraints."
     bl_options = {"REGISTER", "UNDO"}
 
     action: EnumProperty(
@@ -404,9 +407,9 @@ class PYMAXION_OT_forceConstraint(Operator):
 
     def execute(self, context):
         scene = context.scene
-        sciProp = scene.sciProp
+        propertyGroup = getattr(scene, "Force")
         if self.action == "ADD":
-            self.add_forces(context=context, strength=sciProp.value)
+            self.add_forces(context=context, base=propertyGroup.base, power=propertyGroup.power)
         if self.action == "REMOVE":
             self.remove_forces(context=context)
         if self.action == "SHOW":
@@ -414,7 +417,7 @@ class PYMAXION_OT_forceConstraint(Operator):
         return {"FINISHED"}
 
     @staticmethod
-    def add_forces(context, strength):
+    def add_forces(context, base, power):
         obj = bpy.context.active_object
         if obj.type == "MESH":
             if obj.name == "Pymaxion Particle System":
@@ -424,7 +427,7 @@ class PYMAXION_OT_forceConstraint(Operator):
                 if "Forces" not in obj.data:
                     obj.data["Forces"] = {}
                 for v in vs:
-                    obj.data["Forces"][str(v.index)] = {"vector": [0, 0, strength]}
+                    obj.data["Forces"][str(v.index)] = {"vector": [0, 0, base * pow(10, power)]}
                     print("Added a force " + str(v.index))
                 bpy.ops.object.mode_set(mode=mode)
             else:
